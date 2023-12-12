@@ -1,4 +1,4 @@
-# SQL Node Postgres Project
+# SQL Node Project
 
 ### Introduction
 
