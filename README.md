@@ -1,8 +1,8 @@
-# SQL Node Codalong
+# SQL Node Postgres Project
 
 ### Introduction
 
-In this tutorial, we’ll learn how to build a REST API using MySQL as our database and Node.js as our language.
+In this tutorial, we’ll learn how to build a REST API using PostgreSQL as our database and Node.js (JavaScript) as our programming language.
 
 ### Learning Objectives
 
@@ -17,32 +17,44 @@ Students should get **hands-on experience** with:
 
 Follow the below steps and you'll be ready to get going on the codealong!
 
-1. To host our testing MySQL 8.0 database, we’ll use db4free.net. First, go to the db4free signup page, then fill out the required details by choosing your database name and username.
-2. Click on Signup, and you should receive a confirmation email. Confirm your account by clicking on the link in the email. Next, on the sidebar, click on phpMyAdmin. In the phpMyAdmin login, enter the username and password you chose and click Go.
-3. Now, we have an empty database. Let’s add the programming_languages table. First, click on the database name on the left; for me, it was restapitest123. Then, click SQL on the top menu, and put the following code for CREATE TABLE in the text area:
+1. We will be using Render to create a database that will be hosted on a server. Render is a cloud computing platform that allows you to deploy your applications to the web. You can go to https://dashboard.render.com/billing#plan to sign up. You can connect to your Github or use your AC email.
+2. Click on New Postgres Database. Add a name (sql_postgres_practice), select Free, and click Create Database. ** Note, these databases do expire. This is just for practice purposes.
+3. Now, we have an empty database! Scroll to the Connections section. 
+
+
+### Connecting to the Database
+4. Open pgAdmin. Right click on Servers (or Server Groups) and click Register Server
+5. We will now need to enter the information to connect to our database server. Under General, for the name of the server, use sql_postgres_practice. 
+6. Switch to the Connection tab. For the user, enter sql_postgres_practice_user. This should be listed as the Username in the Connections section in Render. In Render, copy the password and add that to pgAdmin. Also, select the "Save Password" button. 
+7. For the hostname/address, select the External Database URL. You will need to remove the first part of the URL as well as the path at the end. For example, if the copied URL from Render looks like postgres://sql_postgres_practice_user:HMoP9Guq0Y53ieEeccuDj453ybRNc4w7@dpg-clnlpe4g7mts73a6t65g-a.oregon-postgres.render.com/sql_postgres_practice. You will only use what is after the @ sign, and remove what is after the /. Your final URL should look like dpg-clnlpe4g7mts73a6t65g-a.oregon-postgres.render.com 
+8. Enter the URL into the hostname/address and click Save. You should now see your Server!
+9. Click on the Server, then Databases. Then click on the sql_postgres_practice database. You will then select Schemas, public, and then Tables. 
+10. We have successful created a database that is running on a server, AND we have connected to that database securely using pgAdmin!
+
+### Adding Data
+
+ Let’s add the programming_languages table. First, right click on the Tables section in your DB in pgAdmin, and then select Query Tool. 
 
 ``` sql
 
-CREATE TABLE `programming_languages`
+CREATE TABLE programming_languages
 (
-  `id`            INT(11) NOT NULL auto_increment ,
-  `name`          VARCHAR(255) NOT NULL ,
-  `released_year` INT NOT NULL ,
-  `githut_rank`   INT NULL ,
-  `pypl_rank`     INT NULL ,
-  `tiobe_rank`    INT NULL ,
-  `created_at`    DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ,
-  `updated_at`    DATETIME on UPDATE CURRENT_TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ,
-  PRIMARY KEY (`id`),
-  UNIQUE `idx_name_unique` (`name`(255))
+  id            SERIAL NOT NULL,
+  name          VARCHAR(255) NOT NULL ,
+  released_year INT NOT NULL ,
+  githut_rank   INT NULL ,
+  pypl_rank     INT NULL ,
+  tiobe_rank    INT NULL ,
+  created_at    TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ,
+  updated_at    TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ,
+  PRIMARY KEY (id)
 )
-engine = innodb charset=utf8mb4 COLLATE utf8mb4_general_ci;
 
 ```
 
-4. Click the Go button to run the query.
-5. The code will return with a green check box and a message along the lines of MySQL returned an empty result set (i.e. zero rows). With that, we’ve created a table called programming_languages with eight columns and a primary key called id, an internet and auto-increment. The name column is unique, and we also added released_year for the programming language. We have three columns to input the rank of the programming language (GitHut: GitHub language stats for Q4 2020, PYPL: The Popularity of Programming Language Index, TIOBE index) The created_at and updated_at columns store dates to keep track of when the rows were created and updated.
-6. Next, we’ll add 16 popular programming languages to our programming_languages table. Click the same SQL link on the top of the page and add the code below:
+4. Click the Play button to run the query.
+5. You should be able to right click on the programming_languages table and select View All Data to see all of your columns!
+6. Next, we’ll add 16 popular programming languages to our programming_languages table. Right click on the programming_languages table and select Query tool to run the following:
 
 ``` sql
 
@@ -67,180 +79,181 @@ VALUES
 
 ```
 
-7. You should receive a message like “16 rows inserted.” Then, the data from our three sources is collected and added to the table in bulk by the INSERT statement, creating 16 rows, one for each programming language. We’ll return to this when we fetch data for the GET API endpoint. If we click on the programming_languages table, visible on the left, we’ll see the rows that we just added.
+7. You should receive a message like “16 rows inserted.” Then, the data from our three sources is collected and added to the table in bulk by the INSERT statement, creating 16 rows, one for each programming language. We’ll return to this when we fetch data for the GET API endpoint. If we click on the programming_languages table, view all rows, we’ll see the rows that we just added. Note: You can learn more about language rankings: githut_rank(https://madnight.github.io/githut/#/pull_requests/2023/3), pypl_rank(https://pypl.github.io/), tiobe_rank (https://www.tiobe.com/tiobe-index/).
 
-### Creating the API
 
-1. In the terminal, navigate into the codealong's root directory. Be sure you're not in any sub-directory. You want to be in `sql-node-library`.
-2. Still in the terminal, run `npm init -y` to initialize the package.json.
+
+### Creating the Web Server and API
+
+1. Open your project's code repository.
+2. Run `npm init` to initialize the package.json.
 3. Run the following command, `npm install express` to add Express.
-4. Create file named `index.js`
-5. Still in the terminal, cd into your src folder and run `node app.js`. (See the below "Starting Point" section.)
-6. Initalize the app.js with the following code:
+4. Create the following file structure
+![Project Structure](./images/projectStructure.png) 
+5. Note: Inside the .gitignore file, you should add /node_modules. This will keep you from pushing the node modules to your github ever time. You can learn more here: https://www.freecodecamp.org/news/gitignore-what-is-it-and-how-to-add-to-repo/
 
-``` javascript
-
-const express = require("express");
-const app = express();
-const port = 3000;
-app.use(express.json());
-app.use(
-  express.urlencoded({
-    extended: true,
-  })
-);
-app.get("/", (req, res) => {
-  res.json({ message: "ok" });
-});
-app.listen(port, () => {
-  console.log(`Example app listening at http://localhost:${port}`);
-});
-
-```
-
-7. Create the following file structure
-![Project Structure](./images/projectStructure.png)
 
 
 ### Linking the DB and the API
-1. We will need to link our Node.js server with MySQL to create our GET programming languages API. We’ll use the mysql2 package to interact with the MySQL database.
-2. First, we need to install mysql2 using the command below at the project root directory: `npm i mysql2`
-3. Next, we’ll create the config file on the root of the project with the following contents:
+1. We will need to link our Node.js server with our database to create our API. We’ll use the node-postgres package to interact with the postgres database. More here: https://node-postgres.com/
+2. We need to install the node-postgres module using the command below at the project root directory: `npm install pg`
+3. Next, we’ll create the config.js file on the root of the project with the following contents:
 
 ``` javascript
 
 const config = {
-  db: {
-    /* don't expose password or any sensitive info, done only for demo */
-    host: "db4free.net",
-    user: "restapitest123",
-    password: "restapitest123",
-    database: "restapitest123",
-    connectTimeout: 60000
-  },
-  listPerPage: 10,
-};
+  user: 'sql_postgres_practice_user',
+  host: '[database.server.com] Replace with your URL',
+  database: 'sql_postgres_practice',
+  password: 'Replace with your password',
+  port: 5432,
+  ssl: true
+}
 module.exports = config;
 
 ```
-4. Next, we’ll create the helper.js file to help with pagination. We only want to get a certain numbers of responses at a time. This function helps us with that, and we can use it over and over. Use this code in your `helper.js` file.
+
+4. The `module.exports` is how you create your own module in Node! This gives you the opportunity to import this object into different files in your program. It is a reusable piece of code that you can use where you need. 
+5. Add the `config.js` file to your `.gitignore` file. We don't want a file with passwords to be added to Github!
+
+
+
+### Building the API
+
+Now, let's write the code that starts our application. In the index.js file, add the following code:
 
 ``` javascript
-function getOffset(currentPage = 1, listPerPage) {
-  return (currentPage - 1) * [listPerPage];
-}
+const express = require('express'); //external module for using express
 
-function emptyOrRows(rows) {
-  if (!rows) {
-    return [];
-  }
-  return rows;
-}
-
-module.exports = {
-  getOffset,
-  emptyOrRows
-}
-```
-
-5. Now, let's write the code that connects us to the database. In the services/db.js file, add the following code:
-
-``` javascript
-const mysql = require('mysql2/promise');
-const config = require('../config');
-
-async function query(sql, params) {
-  const connection = await mysql.createConnection(config.db);
-  const [results, ] = await connection.execute(sql, params);
-
-  return results;
-}
-
-module.exports = {
-  query
-}
-```
-
-6. Now, we’ll write up the `services/programmingLanguages.js` file that acts as the bridge between the route and the database:
-
-``` javascript
-const db = require('./db');
-const helper = require('../helper');
-const config = require('../config');
-
-async function getMultiple(page = 1){
-  const offset = helper.getOffset(page, config.listPerPage);
-  const rows = await db.query(
-    `SELECT id, name, released_year, githut_rank, pypl_rank, tiobe_rank 
-    FROM programming_languages LIMIT ${offset},${config.listPerPage}`
-  );
-  const data = helper.emptyOrRows(rows);
-  const meta = {page};
-
-  return {
-    data,
-    meta
-  }
-}
-
-module.exports = {
-  getMultiple
-}
-```
-
-7. After that, we’ll create the routes file in `routes/programmingLanguages.js`, which looks like the following:
-
-```javascript
-const express = require('express');
-const router = express.Router();
-const programmingLanguages = require('../services/programmingLanguages');
-
-/* GET programming languages. */
-router.get('/', async function(req, res, next) {
-  try {
-    res.json(await programmingLanguages.getMultiple(req.query.page));
-  } catch (err) {
-    console.error(`Error while getting programming languages `, err.message);
-    next(err);
-  }
-});
-
-module.exports = router;
-```
-
-8. Now we need to update our `index.js`
-
-``` javascript
-const express = require("express");
 const app = express();
 const port = 3000;
-const programmingLanguagesRouter = require("./routes/programmingLanguages");
+
 app.use(express.json());
-app.use(
-  express.urlencoded({
-    extended: true,
-  })
-);
-app.get("/", (req, res) => {
-  res.json({ message: "ok" });
-});
-app.use("/programming-languages", programmingLanguagesRouter);
-/* Error handler middleware */
-app.use((err, req, res, next) => {
-  const statusCode = err.statusCode || 500;
-  console.error(err.message, err.stack);
-  res.status(statusCode).json({ message: err.message });
-  return;
-});
+
 app.listen(port, () => {
   console.log(`Example app listening at http://localhost:${port}`);
 });
 
 ```
 
+1. This code should look familiar. We are adding express and building our application. Now we need to add the code that will allow us to connect to our database. 
+
+``` javascript
+const express = require('express'); //external module for using express
+const Client = require('pg') //external module for using postgres with node
+const config = require('./config.js'); // internal module for connecting to our config file
+
+const app = express();
+const port = 3000;
+
+app.use(express.json());
+
+const client = new Client(config); //creating our database Client with our config values
+ 
+await client.connect() //connecting to our database
+
+
+app.listen(port, () => {
+  console.log(`Example app listening at http://localhost:${port}`);
+});
+
+await client.end() //ending the connection to our database
+
+```
+
+2. This code uses a Client, which is an object that allows us to connect with our database. We have to enter the config object to securely connect to the proper database, and then we need to establish a connection.
+
+3. Now, we need to build our route and helper function to get our data. We are going to create a GET request to get all of the programming languages.
+
+
+``` javascript
+const express = require('express'); //external module for using express
+const { Client } = require('pg') //external module for using postgres with node
+const config = require('./config.js'); // internal module for connecting to our config file
+
+const app = express();
+const port = 3000;
+
+app.use(express.json());
+
+const client = new Client(config); //creating our database Client with our config values
+
+//NEW CODE
+const getLanguages = async () => {
+  await client.connect() //connecting to our database
+  const result = await client.query('SELECT * FROM programming_languages');
+  console.log(result.rows);
+  await client.end() //ending the connection to our database
+  return result.rows;
+}
+
+app.get('/get-languages', async (req, res) => {
+  const languages = await getLanguages();
+  res.send(languages);
+});
+
+app.listen(port, () => {
+  console.log(`Example app listening at http://localhost:${port}`);
+});
+```
 
 ### Testing
 
-Now we get to test our application with Postman!
+Now we get to test our application with Postman! Let's open Postman and enter a GET request to `localhost:3000/get-languages`. We should see our list of languages!
 
+### Getting a specific language in our database
+
+``` javascript
+const express = require('express'); //external module for using express
+const { Client } = require('pg') //external module for using postgres with node
+const config = require('./config.js'); // internal module for connecting to our config file
+
+const app = express();
+const port = 3000;
+
+app.use(express.json());
+
+const client = new Client(config); //creating our database Client with our config values
+
+const getLanguages = async () => {
+  await client.connect() //connecting to our database
+  const result = await client.query('SELECT * FROM programming_languages');
+  console.log(result.rows);
+  await client.end() //ending the connection to our database
+  return result.rows;
+}
+
+app.get('/get-languages', async (req, res) => {
+  const languages = await getLanguages();
+  res.send(languages);
+});
+
+
+//NEW CODE
+const getLanguage = async (id) => {
+  await client.connect() //connecting to our database
+  const result = await client.query(`SELECT * FROM programming_languages WHERE id = ${id}`)
+  console.log(result.rows);
+  await client.end() //ending the connection to our database
+  return result.rows;
+}
+
+app.get('/get-language/:id', async (req, res) => {
+  const language = await getLanguage(req.params.id);
+  res.send(language);
+});
+
+
+app.listen(port, () => {
+  console.log(`Example app listening at http://localhost:${port}`);
+});
+
+```
+
+### Testing
+
+Now we get to test our application with Postman! Let's open Postman and enter a GET request to `localhost:3000/get-language/:id`. We should see our list of languages!
+
+
+### Next Steps
 For your lab, you will build on this project by adding a POST for adding a new language and a DELETE for removing a language. 
