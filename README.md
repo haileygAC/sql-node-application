@@ -89,7 +89,7 @@ VALUES
 2. Run `npm init` to initialize the package.json.
 3. Run the following command, `npm install express` to add Express.
 4. Create the following file structure
-![Project Structure](./images/projectStructure.png) 
+![Project Structure](./images/projectStructureImage.png) 
 5. Note: Inside the .gitignore file, you should add /node_modules. This will keep you from pushing the node modules to your github ever time. You can learn more here: https://www.freecodecamp.org/news/gitignore-what-is-it-and-how-to-add-to-repo/
 
 
